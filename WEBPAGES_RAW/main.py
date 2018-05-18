@@ -12,6 +12,13 @@ import re
 
 import pymongo
 
+#initialize variables:
+stopwords = set()
+wordlist = set()
+
+documents = {}
+tags = ['p', 'li', 'title', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6' 'a']
+
 '''
     Checks to see which words in the given webpage (after calling findall with BeautifulSoup)
     actually gives you text displayed on the webpage
@@ -27,49 +34,89 @@ def getText(textData):
     and makes absolute links out of non-absolute ones
 '''
 def is_absolute(link):
-    if link[0:4]=='www.':
+    if ('http://' not in link) or ('https://' not in link):
         link='http://'+link
+
     status=bool(urlparse(link).netloc)
     return (status,link)
 
-#initialize variables:
-stopwords = set()
-wordlist = set()
 
-# Open stopwords.txt file and put the words into stopwords set:
-swtext = open('stopwords.txt', 'r')
+''' Takes in a webpage and the database dictionary, and
+    updates the database dictionary with new tokens
+'''
+def parsePageContent(page, pageText):
+    for words in pageText:
+        words = str(words)
+        words = words.split()
+        for w in words:
+            w = re.sub(r'[^\w]', ' ', w).strip()#w.strip("\.!?;:(){}[]/,''\"")
+            if len(w.split()) > 1:
+                w = w.split()
+                for x in w:
+                    x = x.strip()
+                    updateDBDoc(documents, x, w, page)
+            else:
+                updateDBDoc(documents, w, words, page)
 
-for sw in swtext.readlines():
-    sw = sw.strip("\n")
-    stopwords.add(sw)
 
-# Opens the JSON file 'bookkeeping.json' and stores all of the data into a dictionary:
-with open("bookkeeping.json") as data:
-    webpages = json.load(data)
+def updateDBDoc(documents, token, words, page):
+    doc = {'location': set(), 'tag': set(), 'count': 0}
+
+    token = token.lower()
+
+    if token not in stopwords:
+        if token not in tags:
+
+            if token in wordlist:
+                documents[token]['count'] += 1
+                documents[token]['location'].add(str(page))
+                documents[token]['tag'].add(words[0].strip("< >"))
+            else:
+                doc['count'] = 1
+                doc['location'].add(str(page))
+                doc['tag'].add(words[0].strip("< >"))
+                documents[token] = doc
+                wordlist.add(token)
+
 
 # Start extracting words from files using beautiful soup: https://www.quora.com/How-can-I-extract-only-text-data-from-HTML-pages
-for page in webpages:
-    link = is_absolute(str(webpages[page]))[1]
-    print link
-    url = urllib2.urlopen(link, "lxml")
-    #currPage = open(str(page), 'r')
-    soup = BeautifulSoup(url)
+def parseAll(webpages):
+    for page in webpages:
+        currPage = open(str(page), 'r')
+        soup = BeautifulSoup(currPage, "lxml")
+        pageText = soup.findAll(tags, text=True) # Find all tags on the webpage that include displayed text
+        parsePageContent(page, pageText)
 
-    pageText = soup.findAll(text=True) # Find all tags on the webpage that include displayed text
+def main():
 
-    filteredText = filter(getText, pageText)
+    # Create Pymongo/MongoDB DB:
 
-    for word in filteredText:
-        word = word.split()
-        for w in word:
-            if re.match("([a-z])*([A-Z])*", w): #try to find a regular expression that matches all valid words
-                w = str(w)
-                print w
-                if w not in stopwords:
-                    wordlist.add(w)
+    dbclient = pymongo.MongoClient()
+    db = dbclient['test'] # Grabs the 'test' DB from MongoDB
 
-for w in wordlist:
-    print w
-# # Create Pymongo/MongoDB DB:
-# dbclient = pymongo.MongoClient()
-# db = dbclient['INDEXED_WORDS'] # Grabs the INDEXED_WORDS DB from MongoDB
+    # Open stopwords.txt file and put the words into stopwords set:
+    swtext = open('stopwords.txt', 'r')
+
+    for sw in swtext.readlines():
+        sw = sw.strip("\n")
+        stopwords.add(sw)
+
+    # Opens the JSON file 'bookkeeping.json' and stores all of the data into a dictionary:
+    with open("bookkeeping.json") as data:
+        webpages = json.load(data)
+
+    parseAll(webpages)
+
+    posts = db.posts
+
+    for d in documents:
+        p = {"token":   d,
+            "location": list(documents[d]["location"]),
+            "tag":      list(documents[d]["tag"]),
+            "count":    documents[d]["count"]}
+
+        insertID = posts.insert_one(p)
+
+        print d, documents[d]
+if __name__ == "__main__":
+    main()
