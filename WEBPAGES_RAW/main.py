@@ -40,6 +40,14 @@ def is_absolute(link):
     status=bool(urlparse(link).netloc)
     return (status,link)
 
+## Possible tag substring function --> finds a tag name in a gibberish tag
+def getTagSubstr(tag):
+    for t in tags:
+        index = tag.find(t)
+        if t != -1:
+            resultTag = t
+            return resultTag
+
 
 ''' Takes in a webpage and the database dictionary, and
     updates the database dictionary with new tokens
@@ -49,10 +57,14 @@ def parsePageContent(page, pageText):
         words = str(words)
         words = words.split()
         for w in words:
+            if w == "":
+                continue
             w = re.sub(r'[^\w]', ' ', w).strip()#w.strip("\.!?;:(){}[]/,''\"")
             if len(w.split()) > 1:
                 w = w.split()
                 for x in w:
+                    if x == "":
+                        continue
                     x = x.strip()
                     updateDBDoc(documents, x, w, page)
             else:
