@@ -1,0 +1,76 @@
+<!-- DOCTYPE HTML-->
+<html>
+<head>
+  <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-WskhaSGFgHYWDcbwN70/dfYBj47jz9qbsMId/iRN3ewGhXQFZCSftd1LZCfmhktB" crossorigin="anonymous">
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js" integrity="sha384-smHYKdLADwkXOn1EmN1qk/HfnUcbVRZyYmZ4qpPea6sjB/pTJ0euyQp0Mk8ck+5T" crossorigin="anonymous"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.bundle.min.js" integrity="sha384-u/bQvRA/1bobcXlcEYpsEdFVK/vJs3+T+nXLsBYJthmdBuavHvAW6UsmqO2Gd/F9" crossorigin="anonymous"></script>
+  <!-- <link rel="stylesheet" href="app.css" /> -->
+
+  <title>Token Search</title>
+
+  <style>
+      body {
+        background-color: #c4d5f2;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #title-text {
+        position: relative;
+        font-size: 4.5em;
+        bottom: 1em;
+      }
+
+      #container {
+        display: block;
+        justify-content: center;
+      }
+
+      #search-container {
+        display: flex;
+        justify-content: center;
+      }
+
+      .search-button {
+        margin-left: 15px;
+      }
+
+      /* .query-box {
+        display: inline-block;
+      }*/
+  </style>
+
+</head>
+
+<body>
+  <div id="container">
+    <h1 id="title-text">Token Search!</h1>
+      <form action="" method="post" role="form" id="search-container">
+        {{ form.csrf }}
+        <input type='text' class="form-control col-lg-12 query-box" placeholder="ex: informatics" name="query"/>
+        <button type="submit"class="btn btn-success search-button">Search</button>
+      </form>
+  </div>
+  <!--  For Displaying possible error messages: https://pythonspot.com/flask-web-forms/-->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+
+        {% for message in messages %}
+            {% if "Error" in message[1]: %}
+                <div class="alert alert-warning">
+                {{ message[1] }}
+                </div>
+            {% endif %}
+        {% endfor %}
+            {% endif %}
+
+        {% if query == None %}
+          <div class="alert alert-warning">
+            No search results for {{query}}
+          </div>
+        {% endif %}
+  {% endwith %}
+
+</body>
+</html>
