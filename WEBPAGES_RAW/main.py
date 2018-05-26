@@ -58,24 +58,25 @@ def updateDocuments(page, parseTuple):
         doc = {'location': {}, 'totalCount': 0}
         tokenCount = parseTuple[0].count(i)
         totalWordCount += tokenCount
-        if i not in stopwords and i not in wordlist:
-            if i in documents:
+        if (str(i) not in stopwords):
+            if str(i) in documents:
                 documents[str(i)]['totalCount'] += tokenCount
                 if page in documents[str(i)]['location']:
-                    documents[str(i)]['location'][page] += 1
+                    documents[str(i)]['location'][page] += tokenCount
                 else:
-                    documents[str(i)]['location'][page] = 1
-            else:
+                    documents[str(i)]['location'][page] = tokenCount
+            if str(i) not in documents:
                 doc['totalCount'] = tokenCount
-                doc['location'][page] = 1
+                doc['location'][page] = tokenCount
                 wordlist.add(str(i))
                 documents[str(i)] = doc
 
 def parseAll(webpages):
     for page in webpages:
-        pageText = getSoup(page).text.lower()
-        pt = parsePageContent(pageText)
-        updateDocuments(page, pt)
+        if str(page) not in ["39/373", "55/433", "35/269", "0/438"]:
+            pageText = getSoup(page).text.lower()
+            pt = parsePageContent(pageText)
+            updateDocuments(page, pt)
 
 def loadDB(db, posts):
     for d in documents:

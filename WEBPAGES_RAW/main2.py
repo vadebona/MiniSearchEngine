@@ -103,8 +103,9 @@ def updateDBDoc(documents, token, words, page):
 # Start extracting words from files using beautiful soup: https://www.quora.com/How-can-I-extract-only-text-data-from-HTML-pages
 def parseAll(webpages):
     for page in webpages:
-        pageText = split_words_in_file(page)
-        parsePageContent(page, pageText)
+        if str(page) not in ["39/373", "55/433"]:
+            pageText = split_words_in_file(page)
+            parsePageContent(page, pageText)
 
 ''' Opens the JSON file 'bookkeeping.json' and stores all of the data into a dictionary:
 '''

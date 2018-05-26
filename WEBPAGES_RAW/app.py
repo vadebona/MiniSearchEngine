@@ -48,8 +48,10 @@ def searchQuery():
 
             if results == None:
                 flash(query + " not found")
-                
+
             qo = queryObj(results)
+
+            qo.location = sorted(qo.location, key = lambda x: (-x['tf-idf'], -x['pathCount']))
 
             return render_template('results.html', query=query, posts=qo, json=json, form=form)
         else:

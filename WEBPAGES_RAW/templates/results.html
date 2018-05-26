@@ -40,7 +40,7 @@
       {% for l in posts.location %}
         <tr>
           <td><a href={{json[l['path']]}}>{{l['path']}}</a></td>
-          <td></td>
+          <td>{{l['tf-idf']}}</td>
           <td>{{l['pathCount']}}</td>
         </tr>
       {% endfor %}

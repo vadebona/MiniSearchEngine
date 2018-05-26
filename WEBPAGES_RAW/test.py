@@ -9,10 +9,8 @@ from uuid import uuid4
 import re, os, json, requests, urllib2, pymongo, math, sys, pprint
 
 wordlist = set()
-documents = {}
 tags = set()
-stopwords = set()
-numFiles = len(loadFiles())
+totalWordCount = 0
 
 def split_words_in_file(content):
     pattern=re.compile("\w+")
@@ -25,6 +23,8 @@ def loadFiles():
 
     return webpages
 
+numFiles = len(loadFiles())
+
 def loadStopWords():
     stopwords = set()
     swtext = open('stopwords.txt', 'r')
@@ -34,24 +34,20 @@ def loadStopWords():
         stopwords.add(sw)
     return stopwords
 
+stopwords = loadStopWords()
+
 def calculateLTF(token, directory, count):
     pass
 
 def calculateTFIDF(token, directory):
     pass
 
-def parsePageContent(page, pageText):
-    for p in pageText:
-        if len(p.contents) > 0:
-            for c in p.contents:
-                print c
-                print "\n\n"
-        else:
-            print "---------- No Contents: ----------"
-            print p
-            print "----------------------------------"
-            print "\n\n"
+def parsePageContent(pageText):
+    pattern=re.compile("\w+")
+    allWords = pattern.findall(pageText)
+    uniqueWords = set(allWords)
 
+    return (allWords, uniqueWords)
 
 def updateDBDoc(documents, token, words, page):
     doc = {'location': {}, 'tag': set(), 'count': 0}
@@ -80,40 +76,52 @@ def not_script_or_style(item):
     return item.name != "script" and item.name != "style"
 
 
-def main():
-    webpages = loadFiles()
-    fp = "0/2"
-    p = open(fp, 'r')
-
-    soup = split_words_in_file(p)
-    stopwords = loadStopWords()
-
-    s = soup.text.lower()
-    pattern=re.compile("\w+")
-    w = pattern.findall(s)
-    sw=set(w)
-
-    totalCount = 0
-    for i in sw:
+def updateDocuments(documents, page, parseTuple):
+    print "Parsing " + page + "..."
+    global totalWordCount
+    for i in parseTuple[1]:
         doc = {'location': {}, 'totalCount': 0}
-        tokenCount = w.count(i)
-        totalCount += tokenCount
-        if i not in stopwords and i not in wordlist:
-            if i in documents:
+        tokenCount = parseTuple[0].count(i)
+        totalWordCount += tokenCount
+        if (str(i) not in stopwords):
+            if str(i) in documents:
                 documents[str(i)]['totalCount'] += tokenCount
-                if p in documents[str(i)]['location']:
-                    documents[str(i)]['location'][fp] += 1
+                if page in documents[str(i)]['location']:
+                    documents[str(i)]['location'][page] += tokenCount
                 else:
-                    documents[str(i)]['location'][fp] = 1
-            else:
+                    documents[str(i)]['location'][page] = tokenCount
+            if str(i) not in documents:
                 doc['totalCount'] = tokenCount
-                doc['location'][fp] = 1
+                doc['location'][page] = tokenCount
                 wordlist.add(str(i))
                 documents[str(i)] = doc
+    return documents
 
 
-    for item in documents:
-        print item, documents[item]['totalCount']
+def main():
+    webpages = loadFiles()
+    documents = {}
+    fps = ["0/2", "1/12", "2/3"]
+    webCount = 0
+
+    for fp in webpages:
+        if str(fp) in ["39/373", "55/433", "35/269"]:
+            continue
+        p = open(fp, 'r')
+        soup = split_words_in_file(p).text.lower()
+        stopwords = loadStopWords()
+
+        pt = parsePageContent(soup)
+
+        documents = updateDocuments(documents,str(fp), pt)
+        p.close()
+        webCount += 1
+
+        if webCount > 37000:
+            break
+
+    # for item in documents:
+    #     print item, documents[item]
 
 
 
