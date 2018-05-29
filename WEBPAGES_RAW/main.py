@@ -62,6 +62,7 @@ def xml_format(filename):
 
 def build_flag_table(page,xml_page,token):
     #flag_list=[inURL,inTitle,inHeading]
+    global _webpages_
     flag_list=[False,False,False]
     if not xml_page.title.string==None:
         flag_list[0]=token in xml_page.title.string
