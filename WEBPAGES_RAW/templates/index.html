@@ -36,6 +36,11 @@
         margin-left: 15px;
       }
 
+      .errors {
+        display: block;
+        justify-content: center;
+      }
+
       /* .query-box {
         display: inline-block;
       }*/
@@ -53,24 +58,28 @@
       </form>
   </div>
   <!--  For Displaying possible error messages: https://pythonspot.com/flask-web-forms/-->
+
+
+
   {% with messages = get_flashed_messages(with_categories=true) %}
             {% if messages %}
 
         {% for message in messages %}
             {% if "Error" in message[1]: %}
-                <div class="alert alert-warning">
+                <div class="alert alert-danger errors">
                 {{ message[1] }}
                 </div>
             {% endif %}
+
+            {% if "not found" in messages %}
+              <div class="alert alert-danger errors">
+                {{ message[1]}}
+              </div>
+            {% endif %}
         {% endfor %}
             {% endif %}
-
-        {% if query == None %}
-          <div class="alert alert-warning">
-            No search results for {{query}}
-          </div>
-        {% endif %}
   {% endwith %}
+
 
 </body>
 </html>

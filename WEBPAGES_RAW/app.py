@@ -29,6 +29,23 @@ def getTitle(webpage):
     title = soup.find('title')
     return title
 
+def multi_word_query(query, posts):
+    qry = query.split()
+    r1 = posts.find_one({'token': qry[0]})
+    r2 = posts.find_one({'token': qry[1]})
+
+    r1loc = []
+    r2loc = []
+    # pages = multi_word_query(query, posts)
+    for item in r1['location']:
+        r1loc.append(item)
+    for item in r2['location']:
+        r1loc.append(item)
+
+    pages = [r1loc, (int(r1['count']) + int(r2['count']))]
+
+    return pages
+
 @app.route("/", methods=['GET', 'POST'])
 def searchQuery():
     form = ReusableForm(request.form)
@@ -44,16 +61,24 @@ def searchQuery():
 
             posts = db.posts
 
-            results = posts.find_one({'token': query})
+            if len(query.split()) == 1:
+                results = posts.find_one({'token': query})
+                pages = [results['location'], results['count']]
 
-            if results == None:
-                flash(query + " not found")
+            elif len(query.split()) == 2:
+                pages = multi_word_query(query, posts)
 
-            qo = queryObj(results)
 
-            qo.location = sorted(qo.location, key = lambda x: (-x['tf-idf'], -x['pathCount']))
+            pages[0] = sorted(pages[0], key = lambda x: (-x['tf-idf'], -x['pathCount']))
+            # else:
+            #     qo = queryObj(results)
+            #     qo.location = sorted(qo.location, key = lambda x: (-x['tf-idf'], -x['pathCount']))
 
-            return render_template('results.html', query=query, posts=qo, json=json, form=form)
+            return render_template('results.html',
+                                    query=query,
+                                    json=json,
+                                    form=form,
+                                    pages=pages)
         else:
             flash('Error: Please enter a search query.')
 
