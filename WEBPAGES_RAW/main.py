@@ -60,7 +60,7 @@ def xml_format(filename):
     file.close()
     return bs.BeautifulSoup(content,"lxml")
 
-def builf_flag_table(page,xml_page,token):
+def build_flag_table(page,xml_page,token):
     #flag_list=[inURL,inTitle,inHeading]
     flag_list=[False,False,False]
     if not xml_page.title.string==None:
